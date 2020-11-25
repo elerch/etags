@@ -10,7 +10,8 @@ import sys
 import traceback
 
 session = FuturesSession()
-ddb = boto3.client('dynamodb')
+ddb_url = os.getenv('DDB_ENDPOINT', None)
+ddb = boto3.client('dynamodb', endpoint_url=ddb_url)
 events = boto3.client('events')
 table = os.getenv('ETAGS_TABLE', 'etags')
 event_bus_name = os.getenv('ETAGS_BUS_NAME', 'url-content-changes')
