@@ -81,13 +81,14 @@ def process_changes(changed):
             printerr('DDB did not process item with url %s' %
                      item['PutRequest']['Item']['PK']['S'])
             unprocessed[item['PutRequest']['Item']['PK']['S']] = True
-   response = events.put_events(
-        Entries=[create_event(item) for item in
-                 filter(lambda k: k['url'] not in unprocessed, changed)]
-    )
-    if response['FailedEntryCount'] > 0:
-        for entry in response['Entries']:
-            printerr(json.dumps(entry))
+    if event_bus_name != '':
+        response = events.put_events(
+            Entries=[create_event(item) for item in
+                     filter(lambda k: k['url'] not in unprocessed, changed)]
+        )
+        if response['FailedEntryCount'] > 0:
+            for entry in response['Entries']:
+                printerr(json.dumps(entry))
 
 
 def make_requests(urls, existing_etags):
