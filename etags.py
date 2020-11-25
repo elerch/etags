@@ -28,13 +28,25 @@ def ddb_url(url):
 
 
 def all_etags(urls):
-    response = ddb.batch_get_item(RequestItems={table: {
-        'Keys': [ddb_url(url) for url in urls],
-        }})
-    rc = {}
-    for item in response['Responses'][table]:
-        rc[item['PK']['S']] = item['etag']['S']
-    return rc
+    try:
+        response = ddb.batch_get_item(RequestItems={table: {
+            'Keys': [ddb_url(url) for url in urls],
+            }})
+        rc = {}
+        for item in response['Responses'][table]:
+            if 'etag' in item:
+                rc[item['PK']['S']] = item['etag']['S']
+        return rc
+    except Exception as ex:
+        printerr("Exception getting items: %s. Creating table", ex)
+        response = ddb.create_table(
+            TableName = table,
+            AttributeDefinitions = [
+                { 'AttributeName': 'PK', 'AttributeType': 'S' }
+            ],
+            KeySchema = [ { 'AttributeName': 'PK', 'KeyType': 'HASH' } ],
+        )
+        return all_etags(urls)
 
 
 def create_put_request(item):
