@@ -115,16 +115,10 @@ $(CONTAINER_DOTFILES):
 		$(DKR) build --platform $(OS)/$(ARCH) -t $(REGISTRY)/$(BIN):$(TAG)      \
 			-f .dockerfile-$(BIN)-$(OS)_$(ARCH) .;                                \
 	else                                                                      \
-		if [ "$(HOSTARCH)" = "$(ARCH)" ]; then                                  \
-			$(DKR) build -t $(REGISTRY)/$(BIN):$(TAG)                             \
-				-f .dockerfile-$(BIN)-$(OS)_$(ARCH) .;                              \
-		else                                                                    \
-			echo "Building for different architecture: forcing pull/no-cache";    \
-			$(DKR) build --pull --no-cache                                        \
-				-t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH)    \
-				--platform $(OS)/$(ARCH)                                            \
-				. ;                                                                 \
-		fi;                                                                     \
+		$(DKR) build --pull --no-cache                                          \
+			-t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH)      \
+			--platform $(OS)/$(ARCH)                                              \
+			. ;                                                                   \
 	fi
 	@$(DKR) images -q $(REGISTRY)/$(BIN):$(TAG) > $@
 	@echo
