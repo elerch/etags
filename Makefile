@@ -110,7 +110,7 @@ $(CONTAINER_DOTFILES):
 	@export DOCKER_CLI_EXPERIMENTAL=enabled  &&                               \
 	if $(DKR) --version | grep -q podman; then                                \
 		[ "$(HOSTARCH)" != "$(ARCH)" ] &&                                       \
-			echo "Podman build on different arch not tested: probably broken" &&  \
+			echo "Podman build on different arch is likely broken" &&             \
 			echo "See: https://github.com/containers/buildah/issues/1590";        \
 		$(DKR) build --platform $(OS)/$(ARCH) -t $(REGISTRY)/$(BIN):$(TAG)      \
 			-f .dockerfile-$(BIN)-$(OS)_$(ARCH) .;                                \
@@ -119,9 +119,8 @@ $(CONTAINER_DOTFILES):
 			$(DKR) build -t $(REGISTRY)/$(BIN):$(TAG)                             \
 				-f .dockerfile-$(BIN)-$(OS)_$(ARCH) .;                              \
 		else                                                                    \
-			echo "See https://medium.com/@artur.klauser/building-multi-architecture-docker-images-with-buildx-27d80f7e2408"; \
-			echo "for host qemu setup if the buildx command fails";               \
-			$(DKR) buildx build --load                                            \
+			echo "Building for different architecture: forcing pull/no-cache";    \
+			$(DKR) build --pull --no-cache                                        \
 				-t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH)    \
 				--platform $(OS)/$(ARCH)                                            \
 				. ;                                                                 \
