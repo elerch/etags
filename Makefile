@@ -44,7 +44,17 @@ ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64
 # Used internally.  Users should pass BUILDOS and/or BUILDARCH.
 # guess if go isn't installed on the host
 OS := $(if $(BUILDOS),$(BUILDOS),$(shell go env BUILDOS 2>/dev/null || uname -s | tr '[:upper:]' '[:lower:]'))
-ARCH := $(if $(BUILDARCH),$(BUILDARCH),$(shell go env BUILDARCH 2>/dev/null || echo 'amd64'))
+HOSTARCH := $(shell uname -m)
+HOSTARCH := $(if $(findstring armv5,$(HOSTARCH)),armv5,$(HOSTARCH))
+HOSTARCH := $(if $(findstring armv5,$(HOSTARCH)),armv5,$(HOSTARCH))
+HOSTARCH := $(if $(findstring armv6,$(HOSTARCH)),armv6,$(HOSTARCH))
+HOSTARCH := $(if $(findstring armv7,$(HOSTARCH)),armv7,$(HOSTARCH))
+HOSTARCH := $(if $(subst aarch64,,$(HOSTARCH)),$(HOSTARCH),arm64)
+HOSTARCH := $(if $(subst x86,,$(HOSTARCH)),$(HOSTARCH),386)
+HOSTARCH := $(if $(subst x86_64,,$(HOSTARCH)),$(HOSTARCH),amd64)
+HOSTARCH := $(if $(subst i686,,$(HOSTARCH)),$(HOSTARCH),386)
+HOSTARCH := $(if $(subst i386,,$(HOSTARCH)),$(HOSTARCH),386)
+ARCH := $(if $(BUILDARCH),$(BUILDARCH),$(HOSTARCH))
 
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
@@ -97,7 +107,26 @@ $(CONTAINER_DOTFILES):
 	    -e 's|{ARG_ARCH}|$(ARCH)|g'      \
 	    -e 's|{ARG_OS}|$(OS)|g'          \
 	    Dockerfile > .dockerfile-$(BIN)-$(OS)_$(ARCH)
-	@$(DKR) build --platform=$(OS)/$(ARCH) -t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH) .
+	@export DOCKER_CLI_EXPERIMENTAL=enabled  &&                               \
+	if $(DKR) --version | grep -q podman; then                                \
+		[ "$(HOSTARCH)" != "$(ARCH)" ] &&                                       \
+			echo "Podman build on different arch not tested: probably broken" &&  \
+			echo "See: https://github.com/containers/buildah/issues/1590";        \
+		$(DKR) build --platform $(OS)/$(ARCH) -t $(REGISTRY)/$(BIN):$(TAG)      \
+			-f .dockerfile-$(BIN)-$(OS)_$(ARCH) .;                                \
+	else                                                                      \
+		if [ "$(HOSTARCH)" = "$(ARCH)" ]; then                                  \
+			$(DKR) build -t $(REGISTRY)/$(BIN):$(TAG)                             \
+				-f .dockerfile-$(BIN)-$(OS)_$(ARCH) .;                              \
+		else                                                                    \
+			echo "See https://medium.com/@artur.klauser/building-multi-architecture-docker-images-with-buildx-27d80f7e2408"; \
+			echo "for host qemu setup if the buildx command fails";               \
+			$(DKR) buildx build --load                                            \
+				-t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH)    \
+				--platform $(OS)/$(ARCH)                                            \
+				. ;                                                                 \
+		fi;                                                                     \
+	fi
 	@$(DKR) images -q $(REGISTRY)/$(BIN):$(TAG) > $@
 	@echo
 
@@ -197,11 +226,14 @@ bin-clean:
 
 help: # @HELP prints this message
 help:
+	@echo "NOTE: Use BUILDARCH/BUILDOS variables to override OS/ARCH"
+	@echo
 	@echo "VARIABLES:"
 	@echo "  BINS = $(BINS)"
 	@echo "  OS = $(OS)"
 	@echo "  ARCH = $(ARCH)"
 	@echo "  REGISTRY = $(REGISTRY)"
+	@echo "  HOSTARCH = $(HOSTARCH)"
 	@echo
 	@echo "TARGETS:"
 	@grep -E '^.*: *# *@HELP' $(MAKEFILE_LIST)    \
