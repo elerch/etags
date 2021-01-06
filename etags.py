@@ -114,6 +114,10 @@ def lambda_handler(event, context):
     for future in as_completed(rs):
         try:
             result = future.result()
+            if 'etag' not in result.headers:
+                printerr('WARNING: Will not process, no etag found for %s' %
+                         rsdict[future]['url'])
+                break
             current_etag = result.headers['etag']
             prior_etag = None
             if rsdict[future]['url'] in existing_etags:
