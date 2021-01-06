@@ -139,3 +139,4 @@ cython_debug/
 .container*
 .dockerfile*
 include/
+lambda.zip

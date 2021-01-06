@@ -91,9 +91,25 @@ container containers: $(CONTAINER_DOTFILES)
 	    echo "container: $(REGISTRY)/$$bin:$(TAG)"; \
 	done
 
-lambda-layer: # @HELP creates a lambda layer zipfile "lambda.zip" suitable for uploading
-lambda-layer: # Python - mostly not compiled, and deps that are, are linux/amd64
-	@echo "todo"
+lambda-package: # @HELP creates a lambda package zipfile "lambda.zip" suitable for uploading
+lambda-package: lambda.zip # Python - mostly not compiled, and deps that are, are linux/amd64
+
+SOURCES = $(foreach bin,$(BINS),$(bin).py)
+lambda.zip: requirements.txt $(SOURCES)
+	@cid=$$($(DKR) create amazonlinux:2 /bin/sh -c '                       \
+	amazon-linux-extras enable python3.8;                                  \
+	yum install -y python38 zip;                                           \
+	alternatives --install /usr/bin/python python /usr/bin/python3.8 1;    \
+	alternatives --install /usr/bin/pip pip /usr/bin/pip3.8 1;             \
+	cd /src && pip install --target ./package -r requirements.txt;         \
+	rm lambda.zip 2>/dev/null;                                             \
+	zip -r -9 lambda.zip ./package;                                        \
+	zip -g lambda.zip *.py;                                                \
+	');                                                                    \
+	$(DKR) cp . $$cid:/src/;                                               \
+	$(DKR) start -a $$cid;                                                 \
+	$(DKR) cp $$cid:/src/lambda.zip .;                                     \
+	$(DKR) rm $$cid
 
 # Each container-dotfile target can reference a $(BIN) variable.
 # This is done in 2 steps to enable target-specific variables.
