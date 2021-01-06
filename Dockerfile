@@ -39,14 +39,21 @@ COPY etags.py /src/
 
 WORKDIR /src
 
-RUN true                                        \
-    && pip3 install -r requirements.txt         \
-    && pyinstaller -F etags.py                  \
-    && staticx                                  \
-         --strip                                \
-         --no-compress                          \
-         -l $(find /lib -name libgcc_s.so.1)    \
-         dist/etags dist/app                    \
+# We use find here because different architectures might be wildly different.
+# The specific directory is named by the gcc toolchain, which doesn't really
+# line up here with uname -m. As an example, 32 bit arm libraries can be the
+# same across arm versions (arm7/arm8 32 bit)
+# x86_64: /lib/x86_64-linux-gnu
+# arm64: /lib/aarch64-linux-gnu
+# arm7: /lib/arm-linux-gnueabihf
+RUN true                                                     \
+    && pip3 install -r requirements.txt                      \
+    && pyinstaller -F etags.py                               \
+    && staticx                                               \
+         --strip                                             \
+         --no-compress                                       \
+         -l "$(find /lib -name libgcc_s.so.1 -print -quit)"  \
+         dist/etags dist/app                                 \
     && chmod 755 dist/app
 
 FROM scratch
