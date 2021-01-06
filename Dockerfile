@@ -45,7 +45,7 @@ RUN true                                        \
     && staticx                                  \
          --strip                                \
          --no-compress                          \
-         -l /lib/$(uname -m)-linux-gnu/libgcc_s.so.1 \
+         -l $(find /lib -name libgcc_s.so.1)    \
          dist/etags dist/app                    \
     && chmod 755 dist/app
 
