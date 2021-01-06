@@ -133,7 +133,7 @@ def lambda_handler(event, context):
             traceback.print_exc()
 
     if len(changed) > 0:
-        print('changes detected')
+        printerr('changes detected')
         process_changes(changed)
 
     return {
