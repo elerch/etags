@@ -39,10 +39,7 @@ SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 # Windows not working atm
 #ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
 # Unlikely I'll run on ppc or s390x anytime soon
-#
-# Something is up with scons on platforms outside amd64
-# ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64
-ALL_PLATFORMS := linux/amd64
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64
 
 # Used internally.  Users should pass BUILDOS and/or BUILDARCH.
 # guess if go isn't installed on the host

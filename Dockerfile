@@ -10,8 +10,8 @@ RUN true \
     && apt-get install --no-install-recommends -y \
          build-essential=12.6                     \
          patchelf=0.9*                            \
+    && pip3 install scons==4.0.1                  \
     && pip3 install pyinstaller==4.1              \
-                    scons==4.0.1                  \
                     patchelf-wrapper==1.2.0       \
                     staticx==0.12.0               \
     && rm -rf /var/lib/apt/lists/*
