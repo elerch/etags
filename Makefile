@@ -39,7 +39,8 @@ SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 # Windows not working atm
 #ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
 # Unlikely I'll run on ppc or s390x anytime soon
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64
+# scons needs hacking for old arm
+ALL_PLATFORMS := linux/amd64 linux/arm64
 
 # Used internally.  Users should pass BUILDOS and/or BUILDARCH.
 # guess if go isn't installed on the host
@@ -90,6 +91,10 @@ container containers: $(CONTAINER_DOTFILES)
 	@for bin in $(BINS); do              \
 	    echo "container: $(REGISTRY)/$$bin:$(TAG)"; \
 	done
+
+lambda-layer: # @HELP creates a lambda layer zipfile "lambda.zip" suitable for uploading
+lambda-layer: # Python - mostly not compiled, and deps that are, are linux/amd64
+	@echo "todo"
 
 # Each container-dotfile target can reference a $(BIN) variable.
 # This is done in 2 steps to enable target-specific variables.
