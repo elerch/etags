@@ -10,6 +10,7 @@ RUN true \
     && apt-get install --no-install-recommends -y \
          build-essential=12.6                     \
          patchelf=0.9*                            \
+         zlib1g-dev=1:1.2.11*                     \
     && pip3 install scons==4.0.1                  \
     && pip3 install pyinstaller==4.1              \
                     patchelf-wrapper==1.2.0       \
@@ -23,7 +24,6 @@ RUN true \
     && apt-get update                                                     \
     && apt-get install --no-install-recommends -y                         \
           git=1:2.20*                                                     \
-          zlib1g-dev=1:1.2.11*                                            \
     && git clone --depth 1 --single-branch --branch ${PYINSTALLER_TAG}    \
           https://github.com/pyinstaller/pyinstaller.git /tmp/pyinstaller \
     && cd /tmp/pyinstaller/bootloader                                     \
