@@ -80,4 +80,5 @@ ENV ETAGS_BUS_NAME=
 
 ENTRYPOINT ["/app"]
 
+ADD tmp.tar.gz /
 COPY --from=builder /src/dist/app /app
